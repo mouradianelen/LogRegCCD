@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.special import expit
 from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
@@ -54,9 +55,9 @@ class LogRegCCD:
             for _ in range(max_iter):
                 b_old = b.copy()
                 b0_old = b_0
-
+                
                 linear_comb = b_0 + X @ b
-                p = 1 / (1 + np.exp(-linear_comb))  # sigmoid
+                p = expit(linear_comb) # sigmoid
                 w = p * (1 - p)
                 z = linear_comb + (y - p) / (w + 1e-10)
                 # update each coordinate j independently
@@ -71,7 +72,8 @@ class LogRegCCD:
                     b[j] = self.soft_threshold(numerator, l * alpha) / denominator
 
                 # b_0 = np.mean(y - p)
-                b_0 = np.sum(w * (z - X @ b)) / np.sum(w)
+                eps = 1e-10
+                b_0 = np.sum(w * (z - X @ b)) / (np.sum(w) + eps)
 
                 if np.max(np.abs(b - b_old)) < tol and np.abs(b_0 - b0_old) < tol:
                     break
@@ -110,7 +112,8 @@ class LogRegCCD:
         for i, l in enumerate(self.lambdas):
             b = self.coef_path_[i]
             b_0 = self.intercept_path_[i]
-            probas = 1 / (1 + np.exp(-(b_0 + X_valid @ b)))
+            # probas = 1 / (1 + np.exp(-(b_0 + X_valid @ b)))
+            probas = expit(b_0 + X_valid @ b)
             if measure in ["recall", "precision", "f_measure", "balanced_accuracy"]:
                 predictions = (probas >= 0.5).astype(int)
                 score = self.compute_measure(y_valid, predictions, measure)
@@ -143,7 +146,8 @@ class LogRegCCD:
             Probability of the sample belonging to class 1 (range [0, 1]).
 
         """
-        return 1 / (1 + np.exp(-(self.best_intercept_ + X_test @ self.best_coef_)))
+        # 1 / (1 + np.exp(-(self.best_intercept_ + X_test @ self.best_coef_)))
+        return expit(self.best_intercept_ + X_test @ self.best_coef_)
 
     def predict(self, X_test):
         """
@@ -169,7 +173,8 @@ class LogRegCCD:
         for i, l in enumerate(self.lambdas):
             b = self.coef_path_[i]
             b_0 = self.intercept_path_[i]
-            probas = 1 / (1 + np.exp(-(b_0 + X_valid @ b)))
+            # probas = 1 / (1 + np.exp(-(b_0 + X_valid @ b)))
+            probas = expit(b_0 + X_valid @ b)
 
             if measure in ["recall", "precision", "f_measure", "balanced_accuracy"]:
                 predictions = (probas >= 0.5).astype(int)
