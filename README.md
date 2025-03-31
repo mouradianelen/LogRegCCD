@@ -19,6 +19,8 @@ The model and code for synthetic data generation are in files model and dataset 
 
 To run the notebook you should choose a kernel for your Jupyter environment.
 
+Each dataset is evaluated in a separate notebook.
+
 Notes: Our code has been implemented using VSCode. It makes the installation and running process fairly easy.
 
     
