@@ -18,9 +18,10 @@ class LogRegCCD:
         self.best_lambda_ = None
         self.best_coef_ = None
         self.best_intercept_ = None
+        self.probas_ = []
 
     def fit(
-        self, X_train, y_train, alpha=0.2, tol=1e-8, max_iter=100
+        self, X_train, y_train, alpha=1, tol=1e-8, max_iter=100
     ):
         """
         Fit the model according to the given training data.
@@ -114,6 +115,7 @@ class LogRegCCD:
             b_0 = self.intercept_path_[i]
             # probas = 1 / (1 + np.exp(-(b_0 + X_valid @ b)))
             probas = expit(b_0 + X_valid @ b)
+            self.probas_.append(probas)
             if measure in ["recall", "precision", "f_measure", "balanced_accuracy"]:
                 predictions = (probas >= 0.5).astype(int)
                 score = self.compute_measure(y_valid, predictions, measure)
@@ -174,8 +176,7 @@ class LogRegCCD:
             b = self.coef_path_[i]
             b_0 = self.intercept_path_[i]
             # probas = 1 / (1 + np.exp(-(b_0 + X_valid @ b)))
-            probas = expit(b_0 + X_valid @ b)
-
+            probas = np.array(self.probas_[i])
             if measure in ["recall", "precision", "f_measure", "balanced_accuracy"]:
                 predictions = (probas >= 0.5).astype(int)
                 score = self.compute_measure(y_valid, predictions, measure)
